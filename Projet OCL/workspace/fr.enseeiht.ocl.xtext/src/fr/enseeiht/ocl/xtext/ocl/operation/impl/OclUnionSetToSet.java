@@ -16,7 +16,6 @@ import fr.enseeiht.ocl.xtext.types.OclSet;
 
 public class OclUnionSetToSet extends OclUnion {
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public Object getReturnValue(Object source, List<Object> args, EObject contextTarget) {
 		if (source instanceof Collection collectionSource) {

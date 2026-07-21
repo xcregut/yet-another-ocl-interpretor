@@ -1,0 +1,5 @@
+import "http://empty" as empty
+
+context empty!empty.Liar
+inv r:
+	Sequence{5,6,7}->at(2) = 6

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/5"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-17">
 		<attributes>
 			<attribute name="module" value="true"/>
@@ -7,13 +8,12 @@
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="/fr.enseeiht.ocl.xtext"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/5"/>
 	<classpathentry kind="src" path="/fr.enseeiht.yaoi"/>
-	<classpathentry kind="var" path="ECLIPSE_PLUGINS/org.eclipse.emf.common_2.29.0.v20230810-0713.jar"/>
-	<classpathentry kind="var" path="ECLIPSE_PLUGINS/org.eclipse.emf.ecore_2.35.0.v20230829-0934.jar"/>
-	<classpathentry kind="var" path="ECLIPSE_PLUGINS/org.eclipse.xtext_2.32.0.v20230827-1315.jar"/>
-	<classpathentry kind="var" path="ECLIPSE_PLUGINS/org.eclipse.xtext.util_2.32.0.v20230827-1315.jar"/>
-	<classpathentry kind="var" path="ECLIPSE_PLUGINS/org.eclipse.xtext.testing_2.32.0.v20230827-1315.jar"/>
-	<classpathentry kind="var" path="ECLIPSE_PLUGINS/com.google.inject_7.0.0.jar"/>
+	<classpathentry kind="lib" path="/home/radhi/.p2/pool/plugins/org.eclipse.emf.common_2.45.0.v20260311-1301.jar"/>
+	<classpathentry kind="lib" path="/home/radhi/.p2/pool/plugins/org.eclipse.emf.ecore_2.42.0.v20251210-1145.jar"/>
+	<classpathentry kind="lib" path="/home/radhi/.p2/pool/plugins/org.eclipse.xtext_2.43.0.v20260525-1205.jar"/>
+	<classpathentry kind="lib" path="/home/radhi/.p2/pool/plugins/org.eclipse.xtext.util_2.43.0.v20260525-1205.jar"/>
+	<classpathentry kind="lib" path="/home/radhi/.p2/pool/plugins/org.eclipse.xtext.testing_2.43.0.v20260525-1205.jar"/>
+	<classpathentry kind="lib" path="/home/radhi/.p2/pool/plugins/com.google.inject_7.0.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

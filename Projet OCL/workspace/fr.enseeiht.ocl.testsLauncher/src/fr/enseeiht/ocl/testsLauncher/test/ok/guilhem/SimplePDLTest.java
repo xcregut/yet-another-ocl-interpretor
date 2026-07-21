@@ -23,7 +23,6 @@ import fr.enseeiht.yaoi.ValidationResult;
 
 @DisplayName("Tests SimplePDL de Guilhem OK")
 class SimplePDLTest {
-
 	private static Map<String, ValidationResult> resultMap;
 	private static List<OclInvariant> invs;
 	
@@ -31,7 +30,7 @@ class SimplePDLTest {
 	static void setUpBeforeClass() throws Exception {
 		Path workspacePath = Paths.get(new File(".").getAbsolutePath()).getParent().getParent();
 		resultMap = LauncherUtils.run(workspacePath, "SimplePDL-Guilhem-ok", "SimplePDL.mocl", "SimplePDL.ecore", "Process-blocage.xmi", "Process-concurrence.xmi", "Process-developpement.xmi", "Process-patisserie.xmi", "Process-penurie.xmi");
-		invs = LauncherUtils.getInvariants(workspacePath, "PetriNet-Ayoub-ok", "PetriNet.mocl");
+		invs = LauncherUtils.getInvariants(workspacePath, "SimplePDL-Guilhem-ok", "SimplePDL.mocl");
 	}
 	
 	@ParameterizedTest(name="{0}")

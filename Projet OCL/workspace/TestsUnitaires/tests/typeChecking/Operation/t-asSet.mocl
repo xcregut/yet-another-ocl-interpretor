@@ -1,0 +1,5 @@
+import "http://empty" as empty
+
+context empty!empty.Liar
+inv r:
+  Sequence{1,1,2}->asSet() and true

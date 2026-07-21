@@ -23,7 +23,6 @@ import fr.enseeiht.yaoi.ValidationResult;
 
 @DisplayName("Tests Petrinet de Guilhem OK")
 class PetrinetTest {
-
 	private static Map<String, ValidationResult> resultMap;
 	private static List<OclInvariant> invs;
 	
@@ -31,7 +30,7 @@ class PetrinetTest {
 	static void setUpBeforeClass() throws Exception {
 		Path workspacePath = Paths.get(new File(".").getAbsolutePath()).getParent().getParent();
 		resultMap = LauncherUtils.run(workspacePath, "PetriNet-Guilhem-ok", "PetriNet.mocl", "PetriNet.ecore", "Network-blocage-EMF.xmi", "Network-developpement-EMF.xmi", "Network-patisserie-EMF.xmi", "Network-readarc.xmi", "Network-saisons.xmi");
-		invs = LauncherUtils.getInvariants(workspacePath, "PetriNet-Ayoub-ok", "PetriNet.mocl");
+		invs = LauncherUtils.getInvariants(workspacePath, "PetriNet-Guilhem-ok", "PetriNet.mocl");
 	}
 	
 	@ParameterizedTest(name="{0}")
@@ -81,5 +80,4 @@ class PetrinetTest {
 	        return Stream.of(arguments.toArray(new Arguments[0]));
 	    }
 	}
-
 }

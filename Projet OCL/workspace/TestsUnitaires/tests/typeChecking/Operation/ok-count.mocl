@@ -1,0 +1,5 @@
+import "http://empty" as empty
+
+context empty!empty.Liar
+inv r:
+  Bag{1,1,2}->count(1) = 2

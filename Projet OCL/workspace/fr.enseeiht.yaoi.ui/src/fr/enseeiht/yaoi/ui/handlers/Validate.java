@@ -1,17 +1,16 @@
 package fr.enseeiht.yaoi.ui.handlers;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceFactoryImpl;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
@@ -36,10 +35,10 @@ import fr.enseeiht.yaoi.ui.others.YaoiConsole;
 /**
  * Handler for Validating MOCL resources against the selected XMI.
  * <p>
- * This handler implements the functionality to validate all loaded MOCL files
- * It then opens a result popup scrollable text dialog.
+ * Récupère les modules MOCL en parcourant les ressources .mocl présentes dans le
+ * ResourceSet de l'éditeur (ajoutées par le handler Load), les valide contre le
+ * modèle XMI sélectionné, puis affiche les résultats dans une fenêtre.
  * </p>
- * 
  */
 public class Validate extends AbstractHandler {
 	@Override
@@ -48,86 +47,92 @@ public class Validate extends AbstractHandler {
 			Resource.Factory.Registry reg = Resource.Factory.Registry.INSTANCE;
 			reg.getExtensionToFactoryMap().put("xmi", new XMIResourceFactoryImpl());
 
-			// Récupère l'éditeur actif
+			// Récupère l'éditeur actif et son ResourceSet
 			IEditorPart editor = HandlerUtil.getActiveEditorChecked(event);
 			if (!(editor instanceof IEditingDomainProvider)) {
-				throw new RuntimeException("???");
+				throw new RuntimeException("Not an editing-domain-based editor!");
 			}
 			EditingDomain editorDomain = ((IEditingDomainProvider) editor).getEditingDomain();
-			// Récupère la fenêtre active
+			ResourceSet resourceSet = editorDomain.getResourceSet();
 			Shell shell = HandlerUtil.getActiveShell(event);
 
-			// Charge les resources enregistrées dans l'editor
-			ResourceSet resourceSet = editorDomain.getResourceSet();
-			List<Resource> moclResources = new ArrayList<Resource>();
+			// Récupère les modules MOCL depuis les ressources .mocl de l'éditeur
+			List<Module> modules = new ArrayList<Module>();
 			for (Resource r : resourceSet.getResources()) {
-				String uri = r.getURI().fileExtension();
-				if (uri != null && uri.equals("mocl")) {
-					moclResources.add(r);
+				if (r.getURI() != null && "mocl".equals(r.getURI().fileExtension())
+						&& !r.getContents().isEmpty()
+						&& r.getContents().get(0) instanceof Module) {
+					modules.add((Module) r.getContents().get(0));
 				}
 			}
-			// Si aucun .mocl n'a été ajouté par Load.java
-			if (moclResources.isEmpty()) {
+			if (modules.isEmpty()) {
 				MessageDialog.openError(shell, "Missing Mocl Resource",
-						"Please load an .mocl file first by right-clicking on an .xmi file and selecting 'MOCL → Load' or 'Load Resource'.");
+						"Please load an .mocl file first by right-clicking on the model root and selecting 'MOCL -> Load'.");
 				return null;
 			}
 
-			//// MOCL
-
-			// Charger tous les mocl
-			HashMap<Module, URI> moclModules = new HashMap<Module, URI>();
-			for (Resource mocl : moclResources) {
-				EcoreUtil.resolveAll(mocl);
-				// Récupérer le Module
-				Module module = (Module) mocl.getContents().get(0);
-
-				// Enregistrement des EPackages de tous les imports du .mocl
+			// Enregistre le métamodèle de chaque import (nsURI -> EPackage)
+			for (Module module : modules) {
 				for (Import eImport : module.getImports()) {
-					if (eImport.getPackage().eResource() != null) {
-						URI importUri = eImport.getPackage().eResource().getURI();
-						Resource importResource = resourceSet.getResource(importUri, true);
-						EPackage importEPackage = (EPackage) importResource.getContents().get(0);
-						EPackage.Registry.INSTANCE.put(importEPackage.getNsURI(), importEPackage);
-					} else {
-						throw new RuntimeException("Impossible to load the resource !");
+					EPackage ePackage = eImport.getPackage();
+					if (ePackage != null && ePackage.getNsURI() != null) {
+						EPackage.Registry.INSTANCE.put(ePackage.getNsURI(), ePackage);
 					}
 				}
-
-				moclModules.put(module, mocl.getURI());
 			}
-			//// XMI
 
-			// Récuperer la selection
-			IStructuredSelection selection = HandlerUtil.getCurrentStructuredSelection(event);
-			selection = (IStructuredSelection) PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
-					.getSelection();
-			Object firstElement = selection.getFirstElement();
+			// Récupère la ressource XMI : via la sélection d'arbre, sinon depuis l'éditeur
 			Resource xmiResource = null;
-			if (firstElement instanceof XMIResourceImpl) { // Si l'élement est le .xmi
-				xmiResource = (Resource) firstElement;
-				// xmiResource = resourceSet.createResource(((XMIResource)
-			} else if (firstElement instanceof EObject) { // Si c'est un de ses enfants
-				xmiResource = ((EObject) firstElement).eResource();
-			} else { // le menu ne devrait pas pouvoir s'afficher pour autre chose
-				throw new RuntimeException("Shouldn't be able to call the menu on this : " + firstElement);
+			Object selection = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getSelection();
+			if (selection instanceof IStructuredSelection) {
+				Object firstElement = ((IStructuredSelection) selection).getFirstElement();
+				if (firstElement instanceof XMIResourceImpl) {
+					xmiResource = (Resource) firstElement;
+				} else if (firstElement instanceof EObject) {
+					xmiResource = ((EObject) firstElement).eResource();
+				}
+			}
+			if (xmiResource == null) {
+				for (Resource r : resourceSet.getResources()) {
+					String ext = r.getURI().fileExtension();
+					if (ext != null && ext.equals("xmi")) {
+						xmiResource = r;
+						break;
+					}
+				}
+			}
+			if (xmiResource == null) {
+				MessageDialog.openError(shell, "Missing XMI", "No .xmi model found in the editor.");
+				return null;
 			}
 
-			//// RESULTS
+			// Recharge le XMI à neuf pour qu'il utilise le métamodèle enregistré
+			try {
+				ResourceSet freshSet = new ResourceSetImpl();
+				freshSet.getResourceFactoryRegistry().getExtensionToFactoryMap()
+						.put("xmi", new XMIResourceFactoryImpl());
+				Resource freshXmi = freshSet.getResource(xmiResource.getURI(), true);
+				EcoreUtil.resolveAll(freshXmi);
+				if (!freshXmi.getContents().isEmpty()) {
+					xmiResource = freshXmi;
+				}
+			} catch (Exception ignore) {
+				// en cas d'échec, on garde la ressource de l'éditeur
+			}
 
-			// Appelle l'interpréteur et crée la popup pour les résultats
+			// Validation + construction du message de résultat
 			StringBuilder sb = new StringBuilder();
 			boolean hasErrors = false;
-			for (Module module : moclModules.keySet()) {
+			for (Module module : modules) {
 				ValidationResult res = OclInterpretor.validate(xmiResource, module);
 
-				sb.append(moclModules.get(module).toString() + ":\n");
+				String label = (module.eResource() != null) ? module.eResource().getURI().toString() : "mocl";
+				sb.append(label + ":\n");
 
-				boolean hasErrorsLocal = !res.getErrors().isEmpty();
-				if (hasErrorsLocal) {
+				if (!res.getErrors().isEmpty()) {
 					hasErrors = true;
 					for (ValidationError error : res.getErrors()) {
-						sb.append(error.toString()+"\n");
+						sb.append(error.toString() + "\n");
 					}
 				} else {
 					sb.append("The model conforms to all OCL constraints defined in the MOCL file.\n");
@@ -135,17 +140,12 @@ public class Validate extends AbstractHandler {
 				}
 				sb.append("\n");
 			}
-			if (sb.isEmpty()) {
-				sb.append("The model conforms to all OCL constraints defined in the MOCL file.\n");
-				sb.append("No violations were detected during validation.");
-			}
 
 			String dialogTitle = hasErrors ? "Validation Results" : "Validation Success";
 			String dialogMessage = hasErrors ? "The following validation errors were detected:"
 					: "All validations passed successfully!";
 			Status status = hasErrors ? Status.ERROR : Status.SUCCESS;
 
-			// Display the scrollable dialog with appropriate icon
 			ScrollableDialog dialog = new ScrollableDialog(shell, dialogTitle, dialogMessage, sb.toString(), status);
 			dialog.open();
 		} catch (Exception e) {

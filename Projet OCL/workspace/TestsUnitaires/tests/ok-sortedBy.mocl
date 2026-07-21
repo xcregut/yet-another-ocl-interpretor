@@ -1,0 +1,5 @@
+import "http://empty" as empty
+
+context empty!empty.Liar
+inv r:
+	Set{3,1,2}->sortedBy(i | i)->first() = 1

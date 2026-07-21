@@ -1,0 +1,5 @@
+import "http://empty" as empty
+
+context empty!empty.Liar
+inv r:
+	Set{Set{1,2},Set{3}}->flatten()->size() = 3
