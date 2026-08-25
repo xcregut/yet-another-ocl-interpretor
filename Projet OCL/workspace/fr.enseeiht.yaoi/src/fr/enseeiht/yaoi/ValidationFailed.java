@@ -59,13 +59,40 @@ public class ValidationFailed implements ValidationError{
 				}
 			}
 		}
-		String testedObjectString = this.testedObject.toString();
-		for(EStructuralFeature feat : this.testedObject.eClass().getEAllStructuralFeatures()) {
-			if (feat.getName().toLowerCase().strip().equals("name")) {
-				testedObjectString = (String) this.testedObject.eGet(feat);
+		tostring += this.failedInvariant.getName() + " : viole par " + describe(this.testedObject);
+		return tostring;
+	}
+
+	/**
+	 * Decrit un objet du modele de facon lisible : son type, et si possible son
+	 * identifiant textuel (name, nom, id, titre ou label).
+	 * Exemples : Composant "R1" / Composant (nom vide) / Empreinte
+	 * @param obj l'objet a decrire
+	 * @return une description lisible de l'objet
+	 */
+	static String describe(EObject obj) {
+		if (obj == null) {
+			return "objet inconnu";
+		}
+		String type = obj.eClass().getName();
+		String[] idFeatures = { "name", "nom", "id", "titre", "label" };
+		EStructuralFeature firstIdFeature = null;
+		for (String idName : idFeatures) {
+			for (EStructuralFeature feat : obj.eClass().getEAllStructuralFeatures()) {
+				if (feat.getName().toLowerCase().strip().equals(idName)) {
+					if (firstIdFeature == null) {
+						firstIdFeature = feat;
+					}
+					Object value = obj.eGet(feat);
+					if (value != null && !value.toString().isBlank()) {
+						return type + " \"" + value + "\"";
+					}
+				}
 			}
 		}
-		tostring += this.failedInvariant.getName() + " failed for object " + testedObjectString + ".";
-		return tostring;
+		if (firstIdFeature != null) {
+			return type + " (" + firstIdFeature.getName() + " vide)";
+		}
+		return type;
 	}
 }
